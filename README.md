@@ -12,7 +12,7 @@ Use the badge below to import the latest stable version from the `main` branch:
 
 [![Open your Home Assistant instance and show the blueprint import dialog.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A//raw.githubusercontent.com/EarMaster/home-assistant-schedule-based-climate-control/main/schedule_based_climate_control.yaml)
 
-Alternatively, you can import this specific version: [🔗 Import version v1.0.7](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A//github.com/EarMaster/home-assistant-schedule-based-climate-control/blob/v1.0.7/schedule_based_climate_control.yaml)
+Alternatively, you can import this specific version: [🔗 Import version v1.0.8](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A//github.com/EarMaster/home-assistant-schedule-based-climate-control/blob/v1.0.8/schedule_based_climate_control.yaml)
 
 ---
 
