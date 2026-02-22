@@ -14,32 +14,36 @@ jobs:
       contents: write
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Get current version
         id: get_version
         run: |
-          # Extrahiert die Version aus der README (Format: vX.Y.Z)
-          VERSION=$(grep -oP '(?<=**Version:** v)\d+\.\d+\.\d+' README.md)
+          # Extract version from README (Format: **Current Version:** 1.0.2)
+          VERSION=$(grep -oP '(?<=\*\*Current Version:\*\* )\d+\.\d+\.\d+' README.md)
           echo "old_version=$VERSION" >> $GITHUB_OUTPUT
           
-          # Erhöht die Patch-Version (0.0.1)
+          # Increment Patch version
           IFS='.' read -r major minor patch <<< "$VERSION"
           new_patch=$((patch + 1))
           NEW_VERSION="$major.$minor.$new_patch"
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
-      - name: Update README.md
+      - name: Update Files
         run: |
-          sed -i "s/\*\*Version:\*\* v${{ steps.get_version.outputs.old_version }}/\*\*Version:\*\* v${{ steps.get_version.outputs.new_version }}/g" README.md
+          # 1. Update README.md (**Current Version:** 1.0.x)
+          sed -i "s/\*\*Current Version:\*\* ${{ steps.get_version.outputs.old_version }}/\*\*Current Version:\*\* ${{ steps.get_version.outputs.new_version }}/g" README.md
+          
+          # 2. Update Blueprint (*Version:* 1.0.x)
+          sed -i "s/\*Version:\* ${{ steps.get_version.outputs.old_version }}/\*Version:\* ${{ steps.get_version.outputs.new_version }}/g" schedule_based_climate_control.yaml
 
       - name: Commit & Push changes
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add README.md
+          git add README.md schedule_based_climate_control.yaml
           git commit -m "Bump version to v${{ steps.get_version.outputs.new_version }} [skip ci]"
           git push
 
@@ -48,6 +52,6 @@ jobs:
         with:
           tag_name: v${{ steps.get_version.outputs.new_version }}
           name: Release v${{ steps.get_version.outputs.new_version }}
-          body: "Automatic release for blueprint update."
+          body: "Automatic version bump and release."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

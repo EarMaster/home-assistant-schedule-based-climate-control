@@ -1,10 +1,10 @@
 # Schedule Based Climate Control 🌡️
 
-> **Version:** v1.0.2
+> **Current Version:** 1.0.2
 
 A professional, high-performance Home Assistant blueprint for managing climate entities (ACs, Thermostats, Heaters) based on schedules, safety sensors, and user overrides.
 
-[![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badge/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A//raw.githubusercontent.com/EarMaster/home-assistant-schedule-based-climate-control/main/schedule_based_climate_control.yaml)
+[![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A//raw.githubusercontent.com/EarMaster/home-assistant-schedule-based-climate-control/main/schedule_based_climate_control.yaml)
 
 ---
 

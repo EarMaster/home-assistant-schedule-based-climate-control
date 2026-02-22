@@ -1,8 +1,12 @@
 blueprint:
   name: Schedule Based Climate Control
-  description: High-performance climate control with window safety, vacation mode, and party override.
+  description: >
+    # Schedule Based Climate Control
+
+    A professional, schedule-based climate control blueprint. Features include safety-first window/door sensor integration with delays, vacation mode, and a "Party Mode" override. Supports multiple climate entities, hybrid inputs (static values or helpers), and works with both Celsius and Fahrenheit. Perfect for studio and bedroom automation.
+    
+    *Version:* 1.0.2
   domain: automation
-  source_url: https://github.com/EarMaster/home-assistant-schedule-based-climate-control/blob/main/schedule_based_climate_control.yaml
   input:
     climate_devices:
       name: Climate Entities
