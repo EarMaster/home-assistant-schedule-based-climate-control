@@ -5,7 +5,7 @@ blueprint:
 
     A professional, schedule-based climate control blueprint. Features include safety-first window/door sensor integration with delays, vacation mode, and a "Party Mode" override. Supports multiple climate entities, hybrid inputs (static values or helpers), and works with both Celsius and Fahrenheit. Perfect for studio and bedroom automation.
     
-    *Version:* 1.0.2
+    *Version:* 1.0.3
   domain: automation
   input:
     climate_devices:
