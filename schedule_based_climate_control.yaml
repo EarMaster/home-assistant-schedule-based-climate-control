@@ -162,31 +162,43 @@ trigger:
 action:
   - variables:
       devices: !input climate_devices
-      is_party: "{{ is_state(!input party_mode, 'on') }}"
-      is_vacation: "{{ is_state(!input vacation_mode, 'on') }}"
-      is_window_open: "{{ expand(!input window_sensors) | selectattr('state', 'eq', 'on') | list | count > 0 }}"
-      is_on_schedule: "{{ is_state(!input climate_schedule, 'on') }}"
-      current_temp: "{{ states(!input temp_sensor) | float(0) }}"
+      temp_sensor: !input temp_sensor
+      schedule_helper: !input climate_schedule
+      window_sensors: !input window_sensors
+      vacation_helper: !input vacation_mode
+      party_helper: !input party_mode
+      
+      tc_ent: !input target_temp_cool_ent
+      tc_num: !input target_temp_cool
+      th_ent: !input threshold_hot_ent
+      th_num: !input threshold_hot
+      
+      tht_ent: !input target_temp_heat_ent
+      tht_num: !input target_temp_heat
+      tcld_ent: !input threshold_cold_ent
+      tcld_num: !input threshold_cold
+
+      is_party: "{{ party_helper != none and is_state(party_helper, 'on') }}"
+      is_vacation: "{{ vacation_helper != none and is_state(vacation_helper, 'on') }}"
+      is_window_open: "{{ expand(window_sensors) | selectattr('state', 'eq', 'on') | list | count > 0 }}"
+      is_on_schedule: "{{ is_state(schedule_helper, 'on') }}"
+      current_temp: "{{ states(temp_sensor) | float(0) }}"
 
       goal_cool: >
-        {% set ent = !input target_temp_cool_ent %}
-        {% if ent != none and states(ent) | is_number %} {{ states(ent) | float }}
-        {% else %} {{ !input target_temp_cool | float }} {% endif %}
+        {% if tc_ent != none and states(tc_ent) | is_number %} {{ states(tc_ent) | float }}
+        {% else %} {{ tc_num | float }} {% endif %}
       
       limit_hot: >
-        {% set ent = !input threshold_hot_ent %}
-        {% if ent != none and states(ent) | is_number %} {{ states(ent) | float }}
-        {% else %} {{ !input threshold_hot | float }} {% endif %}
+        {% if th_ent != none and states(th_ent) | is_number %} {{ states(th_ent) | float }}
+        {% else %} {{ th_num | float }} {% endif %}
 
       goal_heat: >
-        {% set ent = !input target_temp_heat_ent %}
-        {% if ent != none and states(ent) | is_number %} {{ states(ent) | float }}
-        {% else %} {{ !input target_temp_heat | float }} {% endif %}
+        {% if tht_ent != none and states(tht_ent) | is_number %} {{ states(tht_ent) | float }}
+        {% else %} {{ tht_num | float }} {% endif %}
 
       limit_cold: >
-        {% set ent = !input threshold_cold_ent %}
-        {% if ent != none and states(ent) | is_number %} {{ states(ent) | float }}
-        {% else %} {{ !input threshold_cold | float }} {% endif %}
+        {% if tcld_ent != none and states(tcld_ent) | is_number %} {{ states(tcld_ent) | float }}
+        {% else %} {{ tcld_num | float }} {% endif %}
 
   - choose:
       - conditions:
