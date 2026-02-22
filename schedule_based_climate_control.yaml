@@ -12,7 +12,7 @@ blueprint:
   source_url: https://raw.githubusercontent.com/EarMaster/home-assistant-schedule-based-climate-control/main/schedule_based_climate_control.yaml
   domain: automation
   homeassistant:
-    min_version: 2024.6.0
+    min_version: 2024.8.0
   input:
     climate_devices:
       name: Climate Entities
@@ -64,14 +64,14 @@ blueprint:
       description: Target temperatures and thresholds for cooling devices.
       input:
         target_temp_cool_ent:
-          name: Target Helper
-          description: Select an input_number (Priority 1)
+          name: Target Temperature Helper (Optional)
+          description: Select an input_number.
           selector:
             entity:
               domain: input_number
-        target_temp_cool_c:
-          name: Target °C
-          description: Fixed Celsius value (Priority 2)
+        target_temp_cool:
+          name: Target Temperature
+          description: Used if no helper is selected.
           default: 21
           selector:
             number:
@@ -79,26 +79,16 @@ blueprint:
               max: 35
               step: 0.5
               unit_of_measurement: "°C"
-        target_temp_cool_f:
-          name: Target °F
-          description: Fixed Fahrenheit value (Priority 3)
-          default: 70
-          selector:
-            number:
-              min: 45
-              max: 95
-              step: 1
-              unit_of_measurement: "°F"
 
         threshold_hot_ent:
-          name: Threshold Helper
-          description: Start cooling above this helper (Priority 1)
+          name: Threshold Temperature Helper (Optional)
+          description: Start cooling above this helper.
           selector:
             entity:
               domain: input_number
-        threshold_hot_c:
-          name: Threshold °C
-          description: Start cooling above this °C (Priority 2)
+        threshold_hot:
+          name: Threshold Temperature
+          description: Used if no helper is selected.
           default: 26
           selector:
             number:
@@ -106,16 +96,6 @@ blueprint:
               max: 40
               step: 0.5
               unit_of_measurement: "°C"
-        threshold_hot_f:
-          name: Threshold °F
-          description: Start cooling above this °F (Priority 3)
-          default: 79
-          selector:
-            number:
-              min: 50
-              max: 105
-              step: 1
-              unit_of_measurement: "°F"
 
     # --- HEATING SECTION ---
     heating_settings:
@@ -124,12 +104,14 @@ blueprint:
       description: Target temperatures and thresholds for heating devices.
       input:
         target_temp_heat_ent:
-          name: Target Helper
+          name: Target Temperature Helper (Optional)
+          description: Select an input_number.
           selector:
             entity:
               domain: input_number
-        target_temp_heat_c:
-          name: Target °C
+        target_temp_heat:
+          name: Target Temperature
+          description: Used if no helper is selected.
           default: 22
           selector:
             number:
@@ -137,23 +119,16 @@ blueprint:
               max: 35
               step: 0.5
               unit_of_measurement: "°C"
-        target_temp_heat_f:
-          name: Target °F
-          default: 72
-          selector:
-            number:
-              min: 45
-              max: 95
-              step: 1
-              unit_of_measurement: "°F"
 
         threshold_cold_ent:
-          name: Threshold Helper
+          name: Threshold Temperature Helper (Optional)
+          description: Start heating below this helper.
           selector:
             entity:
               domain: input_number
-        threshold_cold_c:
-          name: Threshold °C
+        threshold_cold:
+          name: Threshold Temperature
+          description: Used if no helper is selected.
           default: 19
           selector:
             number:
@@ -161,15 +136,6 @@ blueprint:
               max: 25
               step: 0.5
               unit_of_measurement: "°C"
-        threshold_cold_f:
-          name: Threshold °F
-          default: 66
-          selector:
-            number:
-              min: 40
-              max: 80
-              step: 1
-              unit_of_measurement: "°F"
 
 mode: restart
 
@@ -194,7 +160,7 @@ trigger:
       seconds: !input window_delay
 
 action:
-  - vars:
+  - variables:
       devices: !input climate_devices
       is_party: "{{ is_state(!input party_mode, 'on') }}"
       is_vacation: "{{ is_state(!input vacation_mode, 'on') }}"
@@ -205,26 +171,22 @@ action:
       goal_cool: >
         {% set ent = !input target_temp_cool_ent %}
         {% if ent != none and states(ent) | is_number %} {{ states(ent) | float }}
-        {% elif !input target_temp_cool_c is number %} {{ !input target_temp_cool_c }}
-        {% else %} {{ !input target_temp_cool_f }} {% endif %}
+        {% else %} {{ !input target_temp_cool | float }} {% endif %}
       
       limit_hot: >
         {% set ent = !input threshold_hot_ent %}
         {% if ent != none and states(ent) | is_number %} {{ states(ent) | float }}
-        {% elif !input threshold_hot_c is number %} {{ !input threshold_hot_c }}
-        {% else %} {{ !input threshold_hot_f }} {% endif %}
+        {% else %} {{ !input threshold_hot | float }} {% endif %}
 
       goal_heat: >
         {% set ent = !input target_temp_heat_ent %}
         {% if ent != none and states(ent) | is_number %} {{ states(ent) | float }}
-        {% elif !input target_temp_heat_c is number %} {{ !input target_temp_heat_c }}
-        {% else %} {{ !input target_temp_heat_f }} {% endif %}
+        {% else %} {{ !input target_temp_heat | float }} {% endif %}
 
       limit_cold: >
         {% set ent = !input threshold_cold_ent %}
         {% if ent != none and states(ent) | is_number %} {{ states(ent) | float }}
-        {% elif !input threshold_cold_c is number %} {{ !input threshold_cold_c }}
-        {% else %} {{ !input threshold_cold_f }} {% endif %}
+        {% else %} {{ !input threshold_cold | float }} {% endif %}
 
   - choose:
       - conditions:
