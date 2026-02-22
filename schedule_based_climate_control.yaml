@@ -11,6 +11,8 @@ blueprint:
 
   source_url: https://raw.githubusercontent.com/EarMaster/home-assistant-schedule-based-climate-control/main/schedule_based_climate_control.yaml
   domain: automation
+  homeassistant:
+    min_version: 2024.6.0
   input:
     climate_devices:
       name: Climate Entities
@@ -55,109 +57,119 @@ blueprint:
         entity:
           domain: input_boolean
 
-    # --- COOLING INPUTS ---
-    target_temp_cool_ent:
-      name: (Cooling) Target Helper
-      description: Select an input_number (Priority 1)
-      selector:
-        entity:
-          domain: input_number
-    target_temp_cool_c:
-      name: (Cooling) Target °C
-      description: Fixed Celsius value (Priority 2)
-      default: 21
-      selector:
-        number:
-          min: 10
-          max: 35
-          step: 0.5
-          unit_of_measurement: "°C"
-    target_temp_cool_f:
-      name: (Cooling) Target °F
-      description: Fixed Fahrenheit value (Priority 3)
-      default: 70
-      selector:
-        number:
-          min: 45
-          max: 95
-          step: 1
-          unit_of_measurement: "°F"
+    # --- COOLING SECTION ---
+    cooling_settings:
+      name: Cooling Settings
+      icon: mdi:snowflake
+      description: Target temperatures and thresholds for cooling devices.
+      input:
+        target_temp_cool_ent:
+          name: Target Helper
+          description: Select an input_number (Priority 1)
+          selector:
+            entity:
+              domain: input_number
+        target_temp_cool_c:
+          name: Target °C
+          description: Fixed Celsius value (Priority 2)
+          default: 21
+          selector:
+            number:
+              min: 10
+              max: 35
+              step: 0.5
+              unit_of_measurement: "°C"
+        target_temp_cool_f:
+          name: Target °F
+          description: Fixed Fahrenheit value (Priority 3)
+          default: 70
+          selector:
+            number:
+              min: 45
+              max: 95
+              step: 1
+              unit_of_measurement: "°F"
 
-    threshold_hot_ent:
-      name: (Cooling) Threshold Helper
-      description: Start cooling above this helper (Priority 1)
-      selector:
-        entity:
-          domain: input_number
-    threshold_hot_c:
-      name: (Cooling) Threshold °C
-      description: Start cooling above this °C (Priority 2)
-      default: 26
-      selector:
-        number:
-          min: 10
-          max: 40
-          step: 0.5
-          unit_of_measurement: "°C"
-    threshold_hot_f:
-      name: (Cooling) Threshold °F
-      description: Start cooling above this °F (Priority 3)
-      default: 79
-      selector:
-        number:
-          min: 50
-          max: 105
-          step: 1
-          unit_of_measurement: "°F"
+        threshold_hot_ent:
+          name: Threshold Helper
+          description: Start cooling above this helper (Priority 1)
+          selector:
+            entity:
+              domain: input_number
+        threshold_hot_c:
+          name: Threshold °C
+          description: Start cooling above this °C (Priority 2)
+          default: 26
+          selector:
+            number:
+              min: 10
+              max: 40
+              step: 0.5
+              unit_of_measurement: "°C"
+        threshold_hot_f:
+          name: Threshold °F
+          description: Start cooling above this °F (Priority 3)
+          default: 79
+          selector:
+            number:
+              min: 50
+              max: 105
+              step: 1
+              unit_of_measurement: "°F"
 
-    # --- HEATING INPUTS ---
-    target_temp_heat_ent:
-      name: (Heating) Target Helper
-      selector:
-        entity:
-          domain: input_number
-    target_temp_heat_c:
-      name: (Heating) Target °C
-      default: 22
-      selector:
-        number:
-          min: 10
-          max: 35
-          step: 0.5
-          unit_of_measurement: "°C"
-    target_temp_heat_f:
-      name: (Heating) Target °F
-      default: 72
-      selector:
-        number:
-          min: 45
-          max: 95
-          step: 1
-          unit_of_measurement: "°F"
+    # --- HEATING SECTION ---
+    heating_settings:
+      name: Heating Settings
+      icon: mdi:fire
+      description: Target temperatures and thresholds for heating devices.
+      input:
+        target_temp_heat_ent:
+          name: Target Helper
+          selector:
+            entity:
+              domain: input_number
+        target_temp_heat_c:
+          name: Target °C
+          default: 22
+          selector:
+            number:
+              min: 10
+              max: 35
+              step: 0.5
+              unit_of_measurement: "°C"
+        target_temp_heat_f:
+          name: Target °F
+          default: 72
+          selector:
+            number:
+              min: 45
+              max: 95
+              step: 1
+              unit_of_measurement: "°F"
 
-    threshold_cold_ent:
-      name: (Heating) Threshold Helper
-      selector:
-        entity:
-          domain: input_number
-    threshold_cold_c:
-      name: (Heating) Threshold °C
-      default: 19
-      selector:
-        number:
-          min: 5
-          max: 25
-          step: 0.5
-          unit_of_measurement: "°C"
-    threshold_cold_f:
-      name: (Heating) Threshold °F
-      default: 66
-      selector:
-        number:
-          min: 40
-          max: 80
-          step: 1
-          unit_of_measurement: "°F"
+        threshold_cold_ent:
+          name: Threshold Helper
+          selector:
+            entity:
+              domain: input_number
+        threshold_cold_c:
+          name: Threshold °C
+          default: 19
+          selector:
+            number:
+              min: 5
+              max: 25
+              step: 0.5
+              unit_of_measurement: "°C"
+        threshold_cold_f:
+          name: Threshold °F
+          default: 66
+          selector:
+            number:
+              min: 40
+              max: 80
+              step: 1
+              unit_of_measurement: "°F"
 
 mode: restart
 
