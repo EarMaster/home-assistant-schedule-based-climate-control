@@ -1,0 +1,53 @@
+name: Auto Release Blueprint
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'schedule_based_climate_control.yaml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Get current version
+        id: get_version
+        run: |
+          # Extrahiert die Version aus der README (Format: vX.Y.Z)
+          VERSION=$(grep -oP '(?<=**Version:** v)\d+\.\d+\.\d+' README.md)
+          echo "old_version=$VERSION" >> $GITHUB_OUTPUT
+          
+          # Erhöht die Patch-Version (0.0.1)
+          IFS='.' read -r major minor patch <<< "$VERSION"
+          new_patch=$((patch + 1))
+          NEW_VERSION="$major.$minor.$new_patch"
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Update README.md
+        run: |
+          sed -i "s/\*\*Version:\*\* v${{ steps.get_version.outputs.old_version }}/\*\*Version:\*\* v${{ steps.get_version.outputs.new_version }}/g" README.md
+
+      - name: Commit & Push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add README.md
+          git commit -m "Bump version to v${{ steps.get_version.outputs.new_version }} [skip ci]"
+          git push
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.get_version.outputs.new_version }}
+          name: Release v${{ steps.get_version.outputs.new_version }}
+          body: "Automatic release for blueprint update."
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

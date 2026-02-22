@@ -1,0 +1,172 @@
+blueprint:
+  name: Schedule Based Climate Control
+  description: High-performance climate control with window safety, vacation mode, and party override.
+  domain: automation
+  source_url: https://github.com/EarMaster/home-assistant-schedule-based-climate-control/blob/main/schedule_based_climate_control.yaml
+  input:
+    climate_devices:
+      name: Climate Entities
+      description: Select one or more climate/thermostat entities.
+      selector:
+        entity:
+          domain: climate
+          multiple: true
+    temp_sensor:
+      name: Temperature Sensor
+      selector:
+        entity:
+          domain: sensor
+          device_class: temperature
+    climate_schedule:
+      name: Schedule Helper
+      description: A schedule helper (binary) to define active hours.
+      selector:
+        entity:
+          domain: schedule
+    window_sensors:
+      name: Window/Door Sensors (Optional)
+      default: []
+      selector:
+        entity:
+          domain: binary_sensor
+          device_class: [window, door, opening]
+          multiple: true
+    window_delay:
+      name: Window Delay (Seconds)
+      description: Time sensors must remain open/closed before taking action.
+      default: 60
+      selector:
+        number:
+          min: 0
+          max: 600
+          unit_of_measurement: "s"
+    vacation_mode:
+      name: Vacation Mode Helper
+      description: Disables climate devices while you're away.
+      default: []
+      selector:
+        entity:
+          domain: input_boolean
+    party_mode:
+      name: Party Mode (Override)
+      description: Pauses automatic regulation while keeping safety features active.
+      default: []
+      selector:
+        entity:
+          domain: input_boolean
+    target_temp_cool:
+      name: Cooling Target Temperature
+      description: Static number (e.g., 21) or input_number entity.
+      selector:
+        text: {}
+    target_temp_heat:
+      name: Heating Target Temperature
+      description: Static number (e.g., 22) or input_number entity.
+      selector:
+        text: {}
+    threshold_hot:
+      name: Cooling Threshold (Start above...)
+      description: Static number or input_number. Set high to disable cooling.
+      selector:
+        text: {}
+    threshold_cold:
+      name: Heating Threshold (Start below...)
+      description: Static number or input_number. Set low to disable heating.
+      selector:
+        text: {}
+
+mode: restart
+
+trigger:
+  - platform: state
+    entity_id: !input temp_sensor
+  - platform: state
+    entity_id: !input climate_schedule
+  - platform: state
+    entity_id: !input vacation_mode
+  - platform: state
+    entity_id: !input party_mode
+  - platform: state
+    entity_id: !input window_sensors
+    to: "on"
+    for:
+      seconds: !input window_delay
+  - platform: state
+    entity_id: !input window_sensors
+    to: "off"
+    for:
+      seconds: !input window_delay
+
+action:
+  - vars:
+      # Macro to resolve input (can be entity or raw number)
+      resolve_val: >
+        {% macro get_val(input_val) %}
+          {% if states(input_val) | is_number %} {{ states(input_val) | float }}
+          {% elif input_val | is_number %} {{ input_val | float }}
+          {% else %} 0 {% endif %}
+        {% endmacro %}
+
+      devices: !input climate_devices
+      is_party: "{{ is_state(!input party_mode, 'on') }}"
+      is_vacation: "{{ is_state(!input vacation_mode, 'on') }}"
+      is_window_open: "{{ expand(!input window_sensors) | selectattr('state', 'eq', 'on') | list | count > 0 }}"
+      is_on_schedule: "{{ is_state(!input climate_schedule, 'on') }}"
+      
+      current_temp: "{{ states(!input temp_sensor) | float }}"
+      goal_cool: "{{ get_val(!input target_temp_cool) }}"
+      goal_heat: "{{ get_val(!input target_temp_heat) }}"
+      limit_hot: "{{ get_val(!input threshold_hot) }}"
+      limit_cold: "{{ get_val(!input threshold_cold) }}"
+
+  - choose:
+      # --- 1. SAFETY OFF (Highest Priority) ---
+      - conditions:
+          - or:
+              - condition: template
+                value_template: "{{ is_vacation }}"
+              - condition: template
+                value_template: "{{ is_window_open }}"
+              - condition: template
+                value_template: "{{ not is_on_schedule }}"
+        sequence:
+          - action: climate.turn_off
+            target:
+              entity_id: "{{ devices }}"
+
+      # --- 2. PARTY MODE OVERRIDE ---
+      - conditions:
+          - condition: template
+            value_template: "{{ is_party }}"
+        sequence:
+          - stop: "Party Mode active - Automation paused."
+
+      # --- 3. NORMAL REGULATION ---
+      - conditions:
+          - condition: template
+            value_template: "{{ not is_vacation and not is_window_open and is_on_schedule }}"
+        sequence:
+          - choose:
+              # Cooling
+              - conditions:
+                  - condition: template
+                    value_template: "{{ current_temp >= limit_hot }}"
+                sequence:
+                  - action: climate.set_temperature
+                    data: { hvac_mode: cool, temperature: "{{ goal_cool }}" }
+                    target: { entity_id: "{{ devices }}" }
+              # Heating
+              - conditions:
+                  - condition: template
+                    value_template: "{{ current_temp <= limit_cold }}"
+                sequence:
+                  - action: climate.set_temperature
+                    data: { hvac_mode: heat, temperature: "{{ goal_heat }}" }
+                    target: { entity_id: "{{ devices }}" }
+              # Neutral Range (Turn Off)
+              - conditions:
+                  - condition: template
+                    value_template: "{{ goal_heat + 0.5 < current_temp < goal_cool - 0.5 }}"
+                sequence:
+                  - action: climate.turn_off
+                    target: { entity_id: "{{ devices }}" }
