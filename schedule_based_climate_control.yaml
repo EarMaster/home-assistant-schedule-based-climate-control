@@ -7,7 +7,7 @@ blueprint:
 
     Remember to create the necessary [input helpers](/config/helpers) (at least a schedule, optionally input_booleans and input_numbers) before using this blueprint. Adjust thresholds and target temperatures to fit your comfort preferences and climate device capabilities.
     
-    *Version:* 1.0.3
+    *Version:* 1.0.4
 domain: automation
   input:
     climate_devices:
