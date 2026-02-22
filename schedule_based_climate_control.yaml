@@ -46,13 +46,13 @@ blueprint:
           unit_of_measurement: "s"
     vacation_mode:
       name: Vacation Mode Helper
-      default: []
+      default: none
       selector:
         entity:
           domain: input_boolean
     party_mode:
       name: Party Mode (Override)
-      default: []
+      default: none
       selector:
         entity:
           domain: input_boolean
@@ -61,7 +61,7 @@ blueprint:
     target_temp_cool_ent:
       name: (Cooling) Target Helper
       description: Select an input_number (Priority 1)
-      default: []
+      default: none
       selector:
         entity:
           domain: input_number
@@ -89,7 +89,7 @@ blueprint:
     threshold_hot_ent:
       name: (Cooling) Threshold Helper
       description: Start cooling above this helper (Priority 1)
-      default: []
+      default: none
       selector:
         entity:
           domain: input_number
@@ -117,7 +117,7 @@ blueprint:
     # --- HEATING INPUTS ---
     target_temp_heat_ent:
       name: (Heating) Target Helper
-      default: []
+      default: none
       selector:
         entity:
           domain: input_number
@@ -142,7 +142,7 @@ blueprint:
 
     threshold_cold_ent:
       name: (Heating) Threshold Helper
-      default: []
+      default: none
       selector:
         entity:
           domain: input_number
