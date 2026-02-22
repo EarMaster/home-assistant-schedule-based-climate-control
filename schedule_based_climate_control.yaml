@@ -4,13 +4,14 @@ blueprint:
     # Schedule Based Climate Control
 
     A professional, schedule-based climate control blueprint. Features include safety-first window/door sensor integration with delays, vacation mode, and a "Party Mode" override. Supports multiple climate entities, hybrid inputs (static values or helpers), and works with both Celsius and Fahrenheit. Perfect for studio and bedroom automation.
+
+    Remember to create the necessary [input helpers](/config/helpers) (at least a schedule, optionally input_booleans and input_numbers) before using this blueprint. Adjust thresholds and target temperatures to fit your comfort preferences and climate device capabilities.
     
     *Version:* 1.0.3
-  domain: automation
+domain: automation
   input:
     climate_devices:
       name: Climate Entities
-      description: Select one or more climate/thermostat entities.
       selector:
         entity:
           domain: climate
@@ -23,7 +24,6 @@ blueprint:
           device_class: temperature
     climate_schedule:
       name: Schedule Helper
-      description: A schedule helper (binary) to define active hours.
       selector:
         entity:
           domain: schedule
@@ -33,11 +33,9 @@ blueprint:
       selector:
         entity:
           domain: binary_sensor
-          device_class: [window, door, opening]
           multiple: true
     window_delay:
       name: Window Delay (Seconds)
-      description: Time sensors must remain open/closed before taking action.
       default: 60
       selector:
         number:
@@ -46,38 +44,124 @@ blueprint:
           unit_of_measurement: "s"
     vacation_mode:
       name: Vacation Mode Helper
-      description: Disables climate devices while you're away.
       default: []
       selector:
         entity:
           domain: input_boolean
     party_mode:
       name: Party Mode (Override)
-      description: Pauses automatic regulation while keeping safety features active.
       default: []
       selector:
         entity:
           domain: input_boolean
-    target_temp_cool:
-      name: Cooling Target Temperature
-      description: Static number (e.g., 21) or input_number entity.
+
+    # --- COOLING INPUTS ---
+    target_temp_cool_ent:
+      name: (Cooling) Target Helper
+      description: Select an input_number (Priority 1)
+      default: []
       selector:
-        text: {}
-    target_temp_heat:
-      name: Heating Target Temperature
-      description: Static number (e.g., 22) or input_number entity.
+        entity:
+          domain: input_number
+    target_temp_cool_c:
+      name: (Cooling) Target °C
+      description: Fixed Celsius value (Priority 2)
+      default: 21
       selector:
-        text: {}
-    threshold_hot:
-      name: Cooling Threshold (Start above...)
-      description: Static number or input_number. Set high to disable cooling.
+        number:
+          min: 10
+          max: 35
+          step: 0.5
+          unit_of_measurement: "°C"
+    target_temp_cool_f:
+      name: (Cooling) Target °F
+      description: Fixed Fahrenheit value (Priority 3)
+      default: 70
       selector:
-        text: {}
-    threshold_cold:
-      name: Heating Threshold (Start below...)
-      description: Static number or input_number. Set low to disable heating.
+        number:
+          min: 45
+          max: 95
+          step: 1
+          unit_of_measurement: "°F"
+
+    threshold_hot_ent:
+      name: (Cooling) Threshold Helper
+      description: Start cooling above this helper (Priority 1)
+      default: []
       selector:
-        text: {}
+        entity:
+          domain: input_number
+    threshold_hot_c:
+      name: (Cooling) Threshold °C
+      description: Start cooling above this °C (Priority 2)
+      default: 26
+      selector:
+        number:
+          min: 10
+          max: 40
+          step: 0.5
+          unit_of_measurement: "°C"
+    threshold_hot_f:
+      name: (Cooling) Threshold °F
+      description: Start cooling above this °F (Priority 3)
+      default: 79
+      selector:
+        number:
+          min: 50
+          max: 105
+          step: 1
+          unit_of_measurement: "°F"
+
+    # --- HEATING INPUTS ---
+    target_temp_heat_ent:
+      name: (Heating) Target Helper
+      default: []
+      selector:
+        entity:
+          domain: input_number
+    target_temp_heat_c:
+      name: (Heating) Target °C
+      default: 22
+      selector:
+        number:
+          min: 10
+          max: 35
+          step: 0.5
+          unit_of_measurement: "°C"
+    target_temp_heat_f:
+      name: (Heating) Target °F
+      default: 72
+      selector:
+        number:
+          min: 45
+          max: 95
+          step: 1
+          unit_of_measurement: "°F"
+
+    threshold_cold_ent:
+      name: (Heating) Threshold Helper
+      default: []
+      selector:
+        entity:
+          domain: input_number
+    threshold_cold_c:
+      name: (Heating) Threshold °C
+      default: 19
+      selector:
+        number:
+          min: 5
+          max: 25
+          step: 0.5
+          unit_of_measurement: "°C"
+    threshold_cold_f:
+      name: (Heating) Threshold °F
+      default: 66
+      selector:
+        number:
+          min: 40
+          max: 80
+          step: 1
+          unit_of_measurement: "°F"
 
 mode: restart
 
@@ -103,28 +187,38 @@ trigger:
 
 action:
   - vars:
-      # Macro to resolve input (can be entity or raw number)
-      resolve_val: >
-        {% macro get_val(input_val) %}
-          {% if states(input_val) | is_number %} {{ states(input_val) | float }}
-          {% elif input_val | is_number %} {{ input_val | float }}
-          {% else %} 0 {% endif %}
-        {% endmacro %}
-
       devices: !input climate_devices
       is_party: "{{ is_state(!input party_mode, 'on') }}"
       is_vacation: "{{ is_state(!input vacation_mode, 'on') }}"
       is_window_open: "{{ expand(!input window_sensors) | selectattr('state', 'eq', 'on') | list | count > 0 }}"
       is_on_schedule: "{{ is_state(!input climate_schedule, 'on') }}"
+      current_temp: "{{ states(!input temp_sensor) | float(0) }}"
+
+      goal_cool: >
+        {% set ent = !input target_temp_cool_ent %}
+        {% if ent != none and states(ent) | is_number %} {{ states(ent) | float }}
+        {% elif !input target_temp_cool_c is number %} {{ !input target_temp_cool_c }}
+        {% else %} {{ !input target_temp_cool_f }} {% endif %}
       
-      current_temp: "{{ states(!input temp_sensor) | float }}"
-      goal_cool: "{{ get_val(!input target_temp_cool) }}"
-      goal_heat: "{{ get_val(!input target_temp_heat) }}"
-      limit_hot: "{{ get_val(!input threshold_hot) }}"
-      limit_cold: "{{ get_val(!input threshold_cold) }}"
+      limit_hot: >
+        {% set ent = !input threshold_hot_ent %}
+        {% if ent != none and states(ent) | is_number %} {{ states(ent) | float }}
+        {% elif !input threshold_hot_c is number %} {{ !input threshold_hot_c }}
+        {% else %} {{ !input threshold_hot_f }} {% endif %}
+
+      goal_heat: >
+        {% set ent = !input target_temp_heat_ent %}
+        {% if ent != none and states(ent) | is_number %} {{ states(ent) | float }}
+        {% elif !input target_temp_heat_c is number %} {{ !input target_temp_heat_c }}
+        {% else %} {{ !input target_temp_heat_f }} {% endif %}
+
+      limit_cold: >
+        {% set ent = !input threshold_cold_ent %}
+        {% if ent != none and states(ent) | is_number %} {{ states(ent) | float }}
+        {% elif !input threshold_cold_c is number %} {{ !input threshold_cold_c }}
+        {% else %} {{ !input threshold_cold_f }} {% endif %}
 
   - choose:
-      # --- 1. SAFETY OFF (Highest Priority) ---
       - conditions:
           - or:
               - condition: template
@@ -135,42 +229,34 @@ action:
                 value_template: "{{ not is_on_schedule }}"
         sequence:
           - action: climate.turn_off
-            target:
-              entity_id: "{{ devices }}"
-
-      # --- 2. PARTY MODE OVERRIDE ---
+            target: { entity_id: "{{ devices }}" }
       - conditions:
           - condition: template
             value_template: "{{ is_party }}"
         sequence:
-          - stop: "Party Mode active - Automation paused."
-
-      # --- 3. NORMAL REGULATION ---
+          - stop: "Party Mode active"
       - conditions:
           - condition: template
             value_template: "{{ not is_vacation and not is_window_open and is_on_schedule }}"
         sequence:
           - choose:
-              # Cooling
               - conditions:
                   - condition: template
-                    value_template: "{{ current_temp >= limit_hot }}"
+                    value_template: "{{ current_temp >= limit_hot | float }}"
                 sequence:
                   - action: climate.set_temperature
                     data: { hvac_mode: cool, temperature: "{{ goal_cool }}" }
                     target: { entity_id: "{{ devices }}" }
-              # Heating
               - conditions:
                   - condition: template
-                    value_template: "{{ current_temp <= limit_cold }}"
+                    value_template: "{{ current_temp <= limit_cold | float }}"
                 sequence:
                   - action: climate.set_temperature
                     data: { hvac_mode: heat, temperature: "{{ goal_heat }}" }
                     target: { entity_id: "{{ devices }}" }
-              # Neutral Range (Turn Off)
               - conditions:
                   - condition: template
-                    value_template: "{{ goal_heat + 0.5 < current_temp < goal_cool - 0.5 }}"
+                    value_template: "{{ (goal_heat | float) + 0.5 < current_temp < (goal_cool | float) - 0.5 }}"
                 sequence:
                   - action: climate.turn_off
                     target: { entity_id: "{{ devices }}" }
