@@ -1,6 +1,6 @@
 # Schedule Based Climate Control 🌡️
 
-> **Current Version:** 1.1.3
+> **Current Version:** 1.1.4
 
 A professional, high-performance Home Assistant blueprint for managing climate entities (ACs, Thermostats, Heaters) based on schedules, safety sensors, and user overrides.
 

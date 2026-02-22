@@ -34,7 +34,7 @@ jobs:
       - name: Update Files
         run: |
           # 1. Update Version text in README
-          sed -i "s/\*\*Current Version:\*\* v${{ steps.get_version.outputs.old_version }}/\*\*Current Version:\*\* v${{ steps.get_version.outputs.new_version }}/g" README.md
+          sed -i "s/\*\*Current Version:\*\* ${{ steps.get_version.outputs.old_version }}/\*\*Current Version:\*\* ${{ steps.get_version.outputs.new_version }}/g" README.md
           
           # 2. Update Version text in the specific import link
           sed -i "s/Import version v${{ steps.get_version.outputs.old_version }}/Import version v${{ steps.get_version.outputs.new_version }}/g" README.md
