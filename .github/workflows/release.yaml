@@ -33,10 +33,16 @@ jobs:
 
       - name: Update Files
         run: |
-          # 1. Update README.md (**Current Version:** 1.0.x)
-          sed -i "s/\*\*Current Version:\*\* ${{ steps.get_version.outputs.old_version }}/\*\*Current Version:\*\* ${{ steps.get_version.outputs.new_version }}/g" README.md
+          # 1. Update Version text in README
+          sed -i "s/\*\*Current Version:\*\* v${{ steps.get_version.outputs.old_version }}/\*\*Current Version:\*\* v${{ steps.get_version.outputs.new_version }}/g" README.md
           
-          # 2. Update Blueprint (*Version:* 1.0.x)
+          # 2. Update Version text in the specific import link
+          sed -i "s/Import version v${{ steps.get_version.outputs.old_version }}/Import version v${{ steps.get_version.outputs.new_version }}/g" README.md
+
+          # 3. Update the Tag in the specific import URL (matches 'blob/v1.x.x')
+          sed -i "s/blob\/v${{ steps.get_version.outputs.old_version }}/blob\/v${{ steps.get_version.outputs.new_version }}/g" README.md
+
+          # 4. Update Blueprint internal version string
           sed -i "s/\*Version:\* ${{ steps.get_version.outputs.old_version }}/\*Version:\* ${{ steps.get_version.outputs.new_version }}/g" schedule_based_climate_control.yaml
 
       - name: Commit & Push changes
