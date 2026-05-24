@@ -208,7 +208,7 @@ action:
               - condition: template
                 value_template: "{{ is_window_open }}"
               - condition: template
-                value_template: "{{ not is_on_schedule }}"
+                value_template: "{{ not is_on_schedule and trigger.entity_id == schedule_helper }}"
         sequence:
           - action: climate.turn_off
             target: { entity_id: "{{ devices }}" }
